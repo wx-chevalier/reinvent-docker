@@ -15,6 +15,30 @@
       "type": "string",
       "message": "Author"
     }
+    "eslint": {
+      "type": "confirm",
+      "message": "Do you want to use ESLint?"
+    },
+    "jsx": {
+      "type": "confirm",
+      "message": "Generate components in JSX format?",
+      "default": false
+    },
+    "electron": {
+      "type": "confirm",
+      "message": "Support Electron?",
+      "default": false
+    },
+    "testcafe": {
+      "type": "confirm",
+      "message": "Add testcafe to run integration tests?",
+      "default": false
+    },
+    "cssmodule": {
+      "type": "confirm",
+      "message": "Use CSS Module as default css loader type?",
+      "default": false
+    }
   },
   "filters": {
     "client/components/*.vue": "!jsx",

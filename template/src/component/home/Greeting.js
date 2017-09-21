@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import Button from './Button.vue'
+import Button from '../Button.vue'
 
 @Component({
   props: {
@@ -12,7 +12,7 @@ export default class Greeting extends Vue {
   render(h) {
     return (
       <div id="app">
-        <img src="../../public/assets/logo.png"/>
+        <img src="https://github.com/wxyyxc1992/OSS/blob/master/2017/8/1/VuePack.png?raw=true"/>
           <h1>{ this.msg }</h1>
         <h2>组件示例 <Button>aa</Button></h2>
           <ul>

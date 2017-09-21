@@ -11,9 +11,11 @@
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import Greeting from '../component/Greeting';
+import Greeting from '../component/home/Greeting';
 import { Pagination } from 'element-ui';
 import "element-ui/lib/theme-default/index.css";
+
+import "./App.scss"
 
 @Component({
   props: {

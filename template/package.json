@@ -23,9 +23,11 @@
   ],
   "main": "index.js",
   "scripts": {
+    "dev": "npm run start",
     "start": "better-npm-run start:dll && better-npm-run start:dev",
     "build": "npm run clean && better-npm-run build",
-    "build:ssr": "npm run clean && better-npm-run build:ssr && better-npm-run build:server",
+    "build:ssr":
+      "npm run clean && better-npm-run build:ssr && better-npm-run build:server",
     "clean": "rimraf dist",
     "lint": "eslint src",
     "update": "npm-check -u",
@@ -34,41 +36,43 @@
   },
   "betterScripts": {
     "start:dll": {
-      "command": "./node_modules/.bin/webpack  --config ./dev-config/webpack.dll.config.js",
+      "command":
+        "./node_modules/.bin/webpack  --config ./dev-config/webpack.dll.config.js",
       "env": {
         "NODE_ENV": "development"
       }
     },
     "start:dev": {
-      "command": "webpack-dashboard -- node --harmony ./dev-config/server/devServer.js --host 0.0.0.0",
+      "command":
+        "webpack-dashboard -- node --harmony ./dev-config/server/devServer.js --host 0.0.0.0",
       "env": {
         "NODE_ENV": "development"
       }
     },
     "build": {
-      "command": "./node_modules/.bin/webpack --config ./dev-config/webpack.config.js",
+      "command":
+        "./node_modules/.bin/webpack --config ./dev-config/webpack.config.js",
       "env": {
         "NODE_ENV": "production"
       }
     },
     "build:ssr": {
-      "command": "./node_modules/.bin/webpack --config ./dev-config/webpack.config.js",
+      "command":
+        "./node_modules/.bin/webpack --config ./dev-config/webpack.config.js",
       "env": {
         "NODE_ENV": "ssr"
       }
     },
     "build:server": {
-      "command": "./node_modules/.bin/webpack --config ./dev-config/webpack.server.config.js",
+      "command":
+        "./node_modules/.bin/webpack --config ./dev-config/webpack.server.config.js",
       "env": {
         "NODE_ENV": "production"
       }
     }
   },
   "lint-staged": {
-    "src/**/*.{js,jsx,json,css}": [
-      "prettier --single-quote --write",
-      "git add"
-    ]
+    "src/**/*.{js,jsx,json,css}": ["prettier --single-quote --write", "git add"]
   },
   "eslintConfig": {
     "extends": "./dev-config/tool/.eslintrc.js"
@@ -77,15 +81,8 @@
     "extends": "./dev-config/tool/.babelrc"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "jsx"
-    ],
-    "moduleDirectories": [
-      "node_modules",
-      "bower_components",
-      "shared"
-    ],
+    "moduleFileExtensions": ["js", "jsx"],
+    "moduleDirectories": ["node_modules", "bower_components", "shared"],
     "moduleNameMapper": {
       "\\.(css|less|scss)$": "<rootDir>/__mocks__/styleMock.js",
       "\\.(gif|ttf|eot|svg)$": "<rootDir>/__mocks__/fileMock.js"
