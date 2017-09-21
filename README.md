@@ -1,7 +1,43 @@
-# vuepack
-Modern Template For vue-cli, with  Vue.js, Webpack 3, Vue-Router, Vuex, MobX, etc.
+# vuepack: Modern Template For vue-cli, with  Vue.js, Webpack 3, Vue-Router, Vuex, MobX, etc.
 
-本模板收到了 [egoist/vuepack](https://github.com/egoist/vuepack) 的启发，是对于笔者的 [create-webpack-app/vue](https://github.com/wxyyxc1992/create-webpack-app/tree/master/vue) 的模板化改造。
+本模板受到 [egoist/vuepack](https://github.com/egoist/vuepack) 的启发，是对于笔者的 [create-webpack-app/vue](https://github.com/wxyyxc1992/create-webpack-app/tree/master/vue) 的模板化改造。
+
+默认的模板使用了 Flow 作为静态类型检测工具，而在 template-ts 目录下存放的是 TypeScript 模板，在 template-electron 目录下存放了 Electron 模板（目前 Electron 模板还是直接拷贝自 Egoist，会逐步替换）。
+
+```sh
+$ npm install vue-cli -g
+$ vue init wxyyxc1992/vuepack test
+```
+
+# 特性概述
+
+- 技术栈支持
+  - 使用 ES6/ES7 语法，
+  - 允许使用 CSS Modules、SCSS、Less 并且使用 PostCSS 进行自动 Polyfill
+  - 支持使用 styled-component 进行 CSS-in-JS 样式控制
+  - 使用 Vuex 与 Mobx 作为状态管理工具（按需使用）
+  - 使用 Flow 作为静态类型检测工具
+  - 使用 Jest 作为默认的测试框架
+  - 使用 TestCafe 作为默认的 E2E 测试框架
+  - 目前使用 Element 作为默认的组件库，欢迎提出其他建议
+  
+- 开发环境
+  - 使用 Storybook 进行组件预览
+  - 使用 WebpackDevServer 部署开发服务器
+  - 支持组件热加载
+  - 使用 Babel 进行代码转换
+  - 使用 ESLint 进行代码检测
+
+- 构建优化  
+  - 使用 DllPlugin 作为开发环境下公共代码提取工具以优化编译速度
+  - 使用 Prepack & prepack-webpack-plugin 进行代码优化
+
+- 生产环境
+  - 使用 CommonChunksPlugin 作为生产环境下公共代码提取工具
+  - 使用 offline-plugin 添加简单的 PWA 特性增强
+  - 部署方式：支持独立部署（Hash 方式切换路由）、支持服务端部署、支持服务端渲染
+
+
 
 # 常见问题
 
@@ -32,3 +68,15 @@ Error: unable to verify the first certificate
 # About
 
 ## Roadmap
+
+- 个性化项目中固有的部分，进行模板化改造；
+
+## LICENSE
+
+The MIT License (MIT)
+
+Copyright (c) 2017 王下邀月熊 384924552@qq.com
+
+
+
+
