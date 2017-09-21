@@ -9,8 +9,16 @@
 默认的模板使用了 Flow 作为静态类型检测工具，而在 template-ts 目录下存放的是 TypeScript 模板，在 template-electron 目录下存放了 Electron 模板（目前 Electron 模板还是直接拷贝自 Egoist，会逐步替换）。
 
 ```sh
+# 初始化项目
 $ npm install vue-cli -g
 $ vue init wxyyxc1992/vuepack test
+
+# 下载依赖
+$ cd test
+$ npm install
+
+# 运行开发环境
+$ npm run dev // npm start
 ```
 
 # 特性概述
