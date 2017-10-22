@@ -1,7 +1,7 @@
 // eslint-disable-next-line
 
 const eslintrc = {
-  extends: ["eslint-config-airbnb-base"],
+  // extends: ["eslint-config-airbnb-base"],
   env: {
     browser: true,
     node: true,

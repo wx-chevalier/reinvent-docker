@@ -1,13 +1,14 @@
 {
-  "name": "vuepack",
+  "name": "iVuePack",
   "version": "0.0.1",
-  "description": "scaffold for creating engineering vue.js project ",
+  "description":
+    "Scaffold for Creating Engineering Vue.js Project with Webpack, TypeScript",
   "author": "wxyyxc1992",
   "license": "MIT",
-  "homepage": "https://github.com/wxyyxc1992/create-webpack-app",
+  "homepage": "https://github.com/wxyyxc1992/iVuePack",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wxyyxc1992/create-webpack-app"
+    "url": "https://github.com/wxyyxc1992/iVuePack"
   },
   "keywords": [
     "boilerplate",
@@ -36,8 +37,7 @@
   },
   "betterScripts": {
     "start:dll": {
-      "command":
-        "./node_modules/.bin/webpack  --config ./dev-config/webpack.dll.config.js",
+      "command": "webpack  --config ./dev-config/webpack/webpack.dll.config.js",
       "env": {
         "NODE_ENV": "development"
       }
@@ -50,35 +50,23 @@
       }
     },
     "build": {
-      "command":
-        "./node_modules/.bin/webpack --config ./dev-config/webpack.config.js",
+      "command": "webpack --config ./dev-config/webpack/webpack.config.js",
       "env": {
         "NODE_ENV": "production"
       }
     },
     "build:ssr": {
-      "command":
-        "./node_modules/.bin/webpack --config ./dev-config/webpack.config.js",
+      "command": "webpack --config ./dev-config/webpack/webpack.config.js",
       "env": {
         "NODE_ENV": "ssr"
       }
     },
     "build:server": {
-      "command":
-        "./node_modules/.bin/webpack --config ./dev-config/webpack.server.config.js",
+      "command": "webpack --config ./dev-config/webpack/webpack.server.config.js",
       "env": {
         "NODE_ENV": "production"
       }
     }
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx,json,css}": ["prettier --single-quote --write", "git add"]
-  },
-  "eslintConfig": {
-    "extends": "./dev-config/tool/.eslintrc.js"
-  },
-  "babel": {
-    "extends": "./dev-config/tool/.babelrc"
   },
   "jest": {
     "moduleFileExtensions": ["js", "jsx"],
@@ -135,6 +123,7 @@
     "node-sass": "4.5.3",
     "object-assign": "^4.1.1",
     "offline-plugin": "^4.8.3",
+    "opn": "^5.1.0",
     "postcss-flexibility": "2.0.0",
     "postcss-loader": "^2.0.6",
     "prepack-webpack-plugin": "^1.1.0",

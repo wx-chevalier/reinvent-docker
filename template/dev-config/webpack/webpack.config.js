@@ -1,14 +1,13 @@
 const path = require('path');
-const webpack = require('webpack');
-const loaders = require('./webpack/loaders');
-const plugins = require('./webpack/plugins');
-const utils = require('./webpack/utils');
+const loaders = require('../shared/loaders');
+const plugins = require('../shared/plugins');
+const utils = require('../shared/utils');
 
 //判断当前是否处于开发状态下
 const __DEV__ = (process.env.NODE_ENV || 'development') === 'development';
 
 //定义统一的Application，不同的单页面会作为不同的Application
-const appsConfig = require('./apps.config.js');
+const appsConfig = require('../apps.config.js');
 
 //定义入口变量
 let entry;
@@ -19,7 +18,7 @@ if (__DEV__) {
   entry = [
     `webpack-dev-server/client?http://0.0.0.0:${appsConfig.devServer.port}`,
     'webpack/hot/only-dev-server',
-    require('./apps.config.js').devServer.appEntrySrc
+    require('../apps.config.js').devServer.src,
   ];
 } else {
   entry = {};
@@ -49,9 +48,9 @@ let config = {
   output: {
     path: path.join(__dirname, '../dist'), //生成目录
     publicPath: './', //生成的公共目录
-    filename: '[name].bundle.js', //文件名,不加chunkhash,以方便调试时使用，生产环境下可以设置为 [name].bundle.[hash:8].js
-    sourceMapFilename: '[name].bundle.map', //映射名
-    chunkFilename: '[name].[chunkhash].chunk.js' //块文件索引
+    filename: __DEV__ ? '[name].bundle.js' : '[name].[hash:8].bundle.js', //文件名,不加 chunkhash,以方便调试时使用，生产环境下可以设置为
+    sourceMapFilename: '[name].bundle.map', // 映射名
+    chunkFilename: '[name].[chunkhash].chunk.js', // 块文件索引
   },
   //配置插件
   plugins: __DEV__
@@ -62,6 +61,7 @@ let config = {
   module: {
     rules: [
       // loaders.jslint,
+      loaders.tsx,
       loaders.wasm,
       loaders.vue,
       loaders.jsx,
@@ -69,19 +69,19 @@ let config = {
       loaders.styles.scss,
       loaders.styles.less,
       loaders.assets,
-      loaders.json
-    ]
+      loaders.json,
+    ],
   },
   externals: utils.externals,
   resolve: {
     alias: {
-      vue$: 'vue/dist/vue.esm.js'
-    }
+      vue$: 'vue/dist/vue.esm.js',
+    },
   },
   performance: {
-    hints: false
+    hints: false,
   },
-  target: 'web'
+  target: 'web',
 };
 
 module.exports = config;
