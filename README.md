@@ -2,19 +2,16 @@
 ![](https://github.com/wxyyxc1992/OSS/blob/master/2017/8/1/VuePack.png?raw=true)
 
 
-# VuePack: Modern Template For vue-cli, with  Vue.js, Webpack 3, Vue-Router, Vuex, MobX, etc.
+# iVuePack: Modern Template For vue-cli, with  Vue.js, Webpack 3, Vue-Router, Vuex, MobX, etc.
 
-本模板受到 [egoist/vuepack](https://github.com/egoist/vuepack) 的启发，是对于笔者的 [create-webpack-app/vue](https://github.com/wxyyxc1992/create-webpack-app/tree/master/vue) 的模板化改造。默认的模板使用了 Flow 作为静态类型检测工具，而在 template-ts 目录下存放的是 TypeScript 模板，在 template-electron 目录下存放了 Electron 模板（目前 Electron 模板还是直接拷贝自 Egoist，会逐步替换）。
+本模板受到 [egoist/vuepack](https://github.com/egoist/vuepack) 的启发，是对于笔者的 [create-webpack-app/vue](https://github.com/wxyyxc1992/create-webpack-app/tree/master/vue) 的模板化改造。
+
+默认的模板使用了 Flow 作为静态类型检测工具，而在 template-ts 目录下存放的是 TypeScript 模板，在 template-electron 目录下存放了 Electron 模板（目前 Electron 模板还是直接拷贝自 Egoist，会逐步替换）。
 
 ```sh
 # 初始化项目
 $ npm install vue-cli -g
 $ vue init wxyyxc1992/vuepack test
-
-# 使用 TypeScript 模板
-# vue init wxyyxc1992/vuepack#ts test
-# 使用 Electron 模板
-# vue init wxyyxc1992/vuepack#electron test
 
 # 下载依赖
 $ cd test
@@ -24,7 +21,7 @@ $ npm install
 $ npm run dev // npm start
 ```
 
-## 特性概述
+# 特性概述
 
 - 技术栈支持
   - 使用 ES6/ES7 语法，
@@ -53,12 +50,6 @@ $ npm run dev // npm start
   - 部署方式：支持独立部署（Hash 方式切换路由）、支持服务端部署、支持服务端渲染
 
 
-更详细的模板介绍请前往[代码架构解析](https://github.com/wxyyxc1992/vuepack/blob/master/%E4%BB%A3%E7%A0%81%E6%9E%B6%E6%9E%84%E8%A7%A3%E6%9E%90.md)与[开发环境搭建](https://github.com/wxyyxc1992/vuepack/blob/master/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA.md)。
-
-更多的 Web 与 Vue.js 开发相关资料请前往：
-- [现代 JavaScript 开发基础]()
-- [现代 Web 开发基础]()
-- [Vue.js 工程化实践]()
 
 # 常见问题
 
@@ -74,7 +65,7 @@ $ vue init -offline test webpack
 
 ## SSL 校验
 
-原 Webpack 模板默认使用 Nightwatch 进行 E2E 测试（VuePack 中使用的是 TestCafe），其在安装的时候会自动使用 Git 下载 phantomjs；我们可以手动从[这里](https://github.com/Medium/phantomjs/releases/download/v2.1.1/phantomjs-2.1.1-windows.zip)下载 phantomjs 安装包并且添加到系统环境变量路径中。
+vuepack 默认使用 Nightwatch 进行 E2E 测试，其在安装的时候会自动使用 Git 下载 phantomjs；我们可以手动从[这里](https://github.com/Medium/phantomjs/releases/download/v2.1.1/phantomjs-2.1.1-windows.zip)下载 phantomjs 安装包并且添加到系统环境变量路径中。
 
 ```s
 Error making request.
@@ -91,17 +82,6 @@ Error: unable to verify the first certificate
 ## Roadmap
 
 - 个性化项目中固有的部分，进行模板化改造；
-
-## OpenSource Declaration
-
-- [vue-hot-reload-api](https://github.com/vuejs/vue-hot-reload-api)
-- [opn](https://github.com/sindresorhus/opn)
-***
-- [vue-property-decorator](https://github.com/kaorun343/vue-property-decorator)
-- [vue-drawer](https://github.com/bajian/vue-drawer)
-- [Element](http://element.eleme.io/)
-***
-
 
 ## LICENSE
 
