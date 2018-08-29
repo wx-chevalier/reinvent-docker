@@ -5,19 +5,20 @@
 
 所谓消息队列，直观来看有点像蓄水池，能够在生产者与消费者之间完成解耦，并且平衡生产者与消费者之间的计算量与可计算时间之间的差异；目前主流的消息队列有著名的 Kafka、RabbitMQ、RocketMQ 等等。在笔者实现的 [LocalMQ](https://parg.co/beX) 中，从简到复依次实现了 MemoryMessageMQ、EmbeddedMessageQueue 与 LocalMessageQueue 这三个版本；需要说明的是，在三个版本的消息队列中，都是采取所谓的拉模式，即消费者主动向消息队列请求拉取消息的模式。在 wx.demo.* 包下提供了很多的内部功能与性能测试用例，
 
-```
+```java
 // 首先在这里：https://parg.co/beX 下载代码
 // 然后修改 DefaultProducer 对应的继承类
 // 测试 MemoryMessageQueue，则继承 MemoryProducer；
 // 测试 EmbeddedMessageQueue，则继承 EmbeddedProducer；
 // 默认测试 LocalMessageQueue，注意，需要对 DefaultPullConsumer 进行同样修改
 public class DefaultProducer extends LocalProducer
+```
 
+```sh
 // 使用 mvn 运行测试用例，也可以在 Eclipse 或者 Intellij 中打开
-mvn clean package -U assembly:assembly -Dmaven.test.skip=true
+$ mvn clean package -U assembly:assembly -Dmaven.test.skip=true
 
-java -Xmx2048m -Xms2048m  -cp open-messaging-wx.demo-1.0.jar  wx.demo.benchmark.ProducerBenchmark
-
+$ java -Xmx2048m -Xms2048m  -cp open-messaging-wx.demo-1.0.jar  wx.demo.benchmark.ProducerBenchmark
 ```
 
 最简单的 MemoryMessageQueue 即是将消息数据按照选定主题存放在内存中，其主要结构如下图所示：
@@ -198,13 +199,13 @@ EmbeddedMessageQueue 中引入了消息持久化支持，本部分我们也主�
 
 EmbeddedMessageQueue 中定义的消息格式如下：
 
-| 序号   | 消息存储结构            | 备注                                       | 长度（字节数）              |
-| ---- | ----------------- | ---------------------------------------- | -------------------- |
-| 1    | TOTALSIZE         | 消息大小                                     | 4                    |
-| 2    | MAGICCODE         | 消息的 MAGIC CODE                           | 4                    |
-| 3    | BODY              | 前 4 个字节存放消息体大小值，后 bodyLength 大小的空间存储消息体内容 | 4 + bodyLength       |
-| 4    | headers*          | 前 2 个字节（short）存放头部大小，后存放 headersLength 大小的头部数据 | 2 + headersLength    |
-| 5    | properties*       | 前 2 个字节（short）存放属性值大小，后存放 propertiesLength 大小的属性数据 | 2 + propertiesLength |
+| 序号 | 消息存储结构 | 备注                                                                       | 长度（字节数）       |
+| ---- | ------------ | -------------------------------------------------------------------------- | -------------------- |
+| 1    | TOTALSIZE    | 消息大小                                                                   | 4                    |
+| 2    | MAGICCODE    | 消息的 MAGIC CODE                                                          | 4                    |
+| 3    | BODY         | 前 4 个字节存放消息体大小值，后 bodyLength 大小的空间存储消息体内容        | 4 + bodyLength       |
+| 4    | headers*     | 前 2 个字节（short）存放头部大小，后存放 headersLength 大小的头部数据      | 2 + headersLength    |
+| 5    | properties*  | 前 2 个字节（short）存放属性值大小，后存放 propertiesLength 大小的属性数据 | 2 + propertiesLength |
 
 EmbeddedMessageSerializer 是继承自 MessageSerializer 的主要负责消息持久化的类，其提供了消息长度的计算函数：
 ```java
@@ -738,19 +739,19 @@ LocalMessageQueue 中采用了中心化的消息存储方案，其提供的 putM
 PutMessageResult result = this.messageStore.putMessage(message);
 ```
 而 MessageStore 即是存放所有真实消息的中心存储，LocalMessageQueue 中支持更为复杂的消息属性：
-| 序号   | 消息存储结构            | 备注                                       | 长度（字节数）              |
-| ---- | ----------------- | ---------------------------------------- | -------------------- |
-| 1    | TOTALSIZE         | 消息大小                                     | 4                    |
-| 2    | MAGICCODE         | 消息的 MAGIC CODE                           | 4                    |
-| 3    | BODYCRC           | 消息体 BODY CRC，用于重启时校验                     | 4                    |
-| 4    | QUEUEID           | 队列编号，queueID                             | 4                    |
-| 5    | QUEUEOFFSET       | 自增值，不是真正的 consume queue 的偏移量，可以代表这个队列中消息的个数，要通过这个值查找到 consume queue 中数据，QUEUEOFFSET * 12 才是偏移地址 | 8                    |
-| 6    | PHYSICALOFFSET    | 消息在 commitLog 中的物理起始地址偏移量                | 8                    |
-| 7    | STORETIMESTAMP    | 存储时间戳                                    | 8                    |
-| 8    | BODY              | 前 4 个字节存放消息体大小值，后 bodyLength 大小的空间存储消息体内容 | 4 + bodyLength       |
-| 9    | TOPICORQUEUENAME  | 前 1 个字节存放 Topic 大小，后存放 topicOrQueueNameLength 大小的主题名 | 1 + topicOrQueueNameLength    |
-| 10   | headers*          | 前 2 个字节（short）存放头部大小，后存放 headersLength 大小的头部数据 | 2 + headersLength    |
-| 11   | properties*       | 前 2 个字节（short）存放属性值大小，后存放 propertiesLength 大小的属性数据 | 2 + propertiesLength |
+| 序号 | 消息存储结构     | 备注                                                                                                                                            | 长度（字节数）             |
+| ---- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1    | TOTALSIZE        | 消息大小                                                                                                                                        | 4                          |
+| 2    | MAGICCODE        | 消息的 MAGIC CODE                                                                                                                               | 4                          |
+| 3    | BODYCRC          | 消息体 BODY CRC，用于重启时校验                                                                                                                 | 4                          |
+| 4    | QUEUEID          | 队列编号，queueID                                                                                                                               | 4                          |
+| 5    | QUEUEOFFSET      | 自增值，不是真正的 consume queue 的偏移量，可以代表这个队列中消息的个数，要通过这个值查找到 consume queue 中数据，QUEUEOFFSET * 12 才是偏移地址 | 8                          |
+| 6    | PHYSICALOFFSET   | 消息在 commitLog 中的物理起始地址偏移量                                                                                                         | 8                          |
+| 7    | STORETIMESTAMP   | 存储时间戳                                                                                                                                      | 8                          |
+| 8    | BODY             | 前 4 个字节存放消息体大小值，后 bodyLength 大小的空间存储消息体内容                                                                             | 4 + bodyLength             |
+| 9    | TOPICORQUEUENAME | 前 1 个字节存放 Topic 大小，后存放 topicOrQueueNameLength 大小的主题名                                                                          | 1 + topicOrQueueNameLength |
+| 10   | headers*         | 前 2 个字节（short）存放头部大小，后存放 headersLength 大小的头部数据                                                                           | 2 + headersLength          |
+| 11   | properties*      | 前 2 个字节（short）存放属性值大小，后存放 propertiesLength 大小的属性数据                                                                      | 2 + propertiesLength       |
 
 其构造函数中初始化创建的 MappedPartitionQueue 是按照固定大小（默认单文件 1G）的映射文件组：
 ```
@@ -1176,7 +1177,7 @@ public GetMessageResult getMessage(final String topic, final int queueId, final 
 ```
 
 注意，这里返回的其实只是消息在 MessageStore 中的存放地址，真实地消息读取还需要通过 readMessagesFromGetMessageResult 函数：
-```
+```java
 
 /**
     * Description 从 GetMessageResult 中抓取全部的消息
