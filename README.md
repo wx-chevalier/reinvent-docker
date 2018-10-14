@@ -1,4 +1,6 @@
-# Eden: Scripts, Tools, Frameworks for Building Idea Distributed Infrastructure
+# Infra-Wheels
+
+Infrastructure Arsenal & Laboratory, Reinventing LocalMQ(MQ) & HiSQL(HA MySQL) & Focker(Docker) & Automated DevOps ( Web | Linux | JVM ) Tuning Tools, to Build Idea Server Side Infrastructure.
 
 Eden 存放了笔者在日常工作中用于构建分布式虚拟化基础架构的工具与脚本：
 
