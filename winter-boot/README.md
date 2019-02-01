@@ -1,4 +1,4 @@
-![](http://spring.io/img/homepage/icon-spring-framework.svg)
+![image](https://user-images.githubusercontent.com/5803001/52098243-32c76400-2609-11e9-89b1-ac03cb9aab3b.png)
 
 # winter-boot
 
