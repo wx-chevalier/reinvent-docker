@@ -1,15 +1,15 @@
-# Infra-Wheels | 重构的轮子们
+# Focker
 
-Infrastructure Arsenal & Laboratory, Reinventing LocalMQ(MQ) & HiSQL(HA MySQL) & Focker(Docker) & Automated DevOps ( Web | Linux | JVM ) Tuning Tools, to Build Idea Server Side Infrastructure.
+Focker 是从零开始自定义的类 Docker 简化版容器实现，其内部原理与实践阐述可以参考 [深入浅出分布式基础架构-虚拟化篇/从零多姿势仿制 Docker](https://github.com/wxyyxc1992/Distributed-Infrastructure-Series/tree/master/Virtualization)。
 
-Eden 存放了笔者在日常工作中用于构建分布式虚拟化基础架构的工具与脚本：
+# TOC
 
-- [DockerX](./DockerX): DockerX 是笔者在日常工作中使用到的一系列 Docker 镜像集锦，涉及到应用部署、集群架构、站点质量保障、微服务治理等多个方面。
+## Go
 
-- [LocalMQ](./LocalMQ): 从零构建类 RocketMQ 高性能消息队列。
+为了便于对 Go 代码进行统一管理，Focker 的 Go 版本代码迁移到了 [gopher-hut/focker](https://github.com/wxyyxc1992/gopher-hut/tree/master/focker)。
 
-- [Focker](./Focker): 仿 Docker 轻量级实现。
+## Python
 
-# Nav | 导航
+# About
 
-![image](https://user-images.githubusercontent.com/5803001/51801467-483f3580-2279-11e9-8668-f57d002b58f2.png)
+![](https://user-images.githubusercontent.com/5803001/51801467-483f3580-2279-11e9-8668-f57d002b58f2.png)
