@@ -1,0 +1,37 @@
+{
+	"variables": {
+	    "aws_access_key": "{{ env `AWS_ACCESS_KEY_ID` }}",
+	    "aws_secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+	    "aws_region": "eu-central-1",
+	    "source_ami": "ami-fe408091",
+	    "subnet_id": "subnet-24e10b4d"
+	},
+	"builders": [
+	    {
+	      "type": "amazon-ebs",
+	      "access_key": "{{ user `aws_access_key` }}",
+	      "secret_key": "{{ user `aws_secret_key` }}",
+	      "region": "{{ user `aws_region` }}",
+	      "source_ami": "{{ user `source_ami` }}",
+	      "instance_type": "t2.medium",
+          "associate_public_ip_address": true,
+          "subnet_id": "{{ user `subnet_id` }}",
+	      "ssh_username": "ubuntu",
+	      "ami_name": "rubber-docker-{{timestamp}}",
+          "ami_groups": [
+              "all"
+          ]
+	    }
+    ],
+    "provisioners": [
+		{
+			"type": "file",
+			"source": "vimrc",
+			"destination": "/tmp/vimrc"
+		},
+    	{
+    		"type": "shell",
+    		"script": "bootstrap.sh"
+    	}
+    ]
+}
