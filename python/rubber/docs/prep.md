@@ -12,6 +12,7 @@ In addition, we would also like to abstract each postgres instance's view of the
 For example postgres stores its data in `/var/lib/postgres` and we would like to preserve that regardless of how many postgres instances are running on that host.
 
 So to sum up, this is what we want from a container:
+
 - isolation
 - abstraction
 - resource constraints
@@ -24,6 +25,7 @@ To make things more manageable, we want the kernel to provide a mechanism which 
 Unfortunately, such a mechanism does not exist in Linux.
 Instead, we have a a few independent mechanisms which we can orchestrate together to achieve various levels of isolation, abstraction and resource constraints.
 We have:
+
 - namespaces
 - cgroups
 - chroot/pivot_root
@@ -34,6 +36,7 @@ Thus, a "Linux container" is not a well defined entity.
 From the kernel perspective, there is no such thing as a container, just a bunch of processes with namespaces, cgroups and so on.
 
 To understand how these mechanisms work, it's a good idea to revisit how relevant Linux primitives work:
+
 - [Processes](prep-processes.md)
 - [Users](prep-users.md)
 - [Mounts](prep-mounts.md)
@@ -41,6 +44,7 @@ To understand how these mechanisms work, it's a good idea to revisit how relevan
 - [Memory management](prep-memory.md)
 
 After going over the primitives, let's see how the new mechanisms work:
+
 - [Namespaces](prep-namespaces.md)
 - [cgroups](prep-cgroups.md)
 - [seccomp](prep-seccomp.md)

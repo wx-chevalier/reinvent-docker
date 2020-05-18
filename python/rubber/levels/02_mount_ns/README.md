@@ -1,7 +1,7 @@
 # Level 02: mount namespace
 
 Let's add a mount namespace using the [unshare()](https://rawgit.com/Fewbytes/rubber-docker/master/docs/linux/index.html#linux.unshare) call.
-Mount namespaces essentially work like bind mounts - operations in mount namespaces will be propagated to other namespaces *unless* we make the parent mount (/ in our case) a *private* mount (or similar).
+Mount namespaces essentially work like bind mounts - operations in mount namespaces will be propagated to other namespaces _unless_ we make the parent mount (/ in our case) a _private_ mount (or similar).
 For this reason, we need to change / to a private mount.
 This is done using the [mount()](https://rawgit.com/Fewbytes/rubber-docker/master/docs/linux/index.html#linux.mount) syscall with `MS_PRIVATE` and `MS_REC` flags (why do we need `MS_REC`?)
 
@@ -26,7 +26,9 @@ Look at the host's `/dev` and think which devices you might need, note their min
 ## How to check your work:
 
 ### Mount namespace
+
 Verify your new forked process is in a different mount namespace
+
 ```bash
 $ ls -lh /proc/self/ns/mnt
 lrwxrwxrwx 1 root root 0 Mar 18 04:13 /proc/self/ns/mnt -> mnt:[4026531840]
@@ -36,6 +38,7 @@ lrwxrwxrwx 1 root root 0 Mar 18 04:13 /proc/self/ns/mnt -> mnt:[4026532139]
 ```
 
 Create a new mount inside the container, and make sure it's invisible from the outside
+
 ```bash
 $ sudo python rd.py run -i ubuntu /bin/bash
 root@ip-172-31-31-83:/# mkdir /mnt/moo
@@ -47,7 +50,9 @@ $
 ```
 
 ### Device nodes
+
 We love throwing stuff to /dev/null, what if it was a regular file?
+
 ```bash
 # Without a null device node
 $ sudo python rd.py run -i ubuntu /bin/bash
@@ -64,4 +69,5 @@ crw-r--r-- 1 root root 1, 3 Jun 21 16:44 /dev/null
 ```
 
 ## Cleanup
+
 Don't forget to remove the containers and mounts using [cleanup.sh](../cleanup.sh)

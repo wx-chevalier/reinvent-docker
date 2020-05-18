@@ -104,7 +104,8 @@ def run(image_name, image_dir, container_dir, command):
     if pid == 0:
         # This is the child, we'll try to do some containment here
         try:
-            contain(command, image_name, image_dir, container_id, container_dir)
+            contain(command, image_name, image_dir,
+                    container_id, container_dir)
         except Exception:
             traceback.print_exc()
             os._exit(1)  # something went wrong in contain()

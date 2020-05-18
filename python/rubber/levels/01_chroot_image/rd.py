@@ -23,8 +23,6 @@ import uuid
 import click
 import traceback
 
-import linux
-
 
 def _get_image_path(image_name, image_dir, image_suffix='tar'):
     return os.path.join(image_dir, os.extsep.join([image_name, image_suffix]))
