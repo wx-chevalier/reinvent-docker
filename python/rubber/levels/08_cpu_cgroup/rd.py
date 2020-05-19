@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 8: Add CPU Control group.
+"""Docker From Scratch Workshop - Level 9: Add Memory Control group.
 
-Goal: prevent your container from starving host processes CPU time.
+Goal: prevent your container from eating all the RAM.
 """
 
 from __future__ import print_function
@@ -95,14 +95,32 @@ def _create_mounts(new_root):
     makedev(os.path.join(new_root, 'dev'))
 
 
+def _setup_cpu_cgroup(container_id, cpu_shares):
+    CPU_CGROUP_BASEDIR = '/sys/fs/cgroup/cpu'
+    container_cpu_cgroup_dir = os.path.join(
+        CPU_CGROUP_BASEDIR, 'rubber_docker', container_id)
+
+    # Insert the container to new cpu cgroup named 'rubber_docker/container_id'
+    if not os.path.exists(container_cpu_cgroup_dir):
+        os.makedirs(container_cpu_cgroup_dir)
+    tasks_file = os.path.join(container_cpu_cgroup_dir, 'tasks')
+    open(tasks_file, 'w').write(str(os.getpid()))
+
+    # If (cpu_shares != 0)  => set the 'cpu.shares' in our cpu cgroup
+    if cpu_shares:
+        cpu_shares_file = os.path.join(container_cpu_cgroup_dir, 'cpu.shares')
+        open(cpu_shares_file, 'w').write(str(cpu_shares))
+
+
 def contain(command, image_name, image_dir, container_id, container_dir,
-            cpu_shares):
-    # TODO: insert the container to a new cpu cgroup named:
-    #       'rubber_docker/container_id'
+            cpu_shares, memory, memory_swap):
+    _setup_cpu_cgroup(container_id, cpu_shares)
 
-    # TODO: if (cpu_shares != 0)  => set the 'cpu.shares' in our cpu cgroup
+    # TODO: similarly to the CPU cgorup, add Memory cgroup support here
+    #       setup memory -> memory.limit_in_bytes,
+    #       memory_swap -> memory.memsw.limit_in_bytes if they are not None
 
-    linux.sethostname(container_id)  # change hostname to container_id
+    linux.sethostname(container_id)  # Change hostname to container_id
 
     linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
 
@@ -125,6 +143,14 @@ def contain(command, image_name, image_dir, container_id, container_dir,
 
 
 @cli.command(context_settings=dict(ignore_unknown_options=True,))
+@click.option('--memory',
+              help='Memory limit in bytes.'
+              ' Use suffixes to represent larger units (k, m, g)',
+              default=None)
+@click.option('--memory-swap',
+              help='A positive integer equal to memory plus swap.'
+              ' Specify -1 to enable unlimited swap.',
+              default=None)
 @click.option('--cpu-shares', help='CPU shares (relative weight)', default=0)
 @click.option('--image-name', '-i', help='Image name', default='ubuntu')
 @click.option('--image-dir', help='Images directory',
@@ -132,7 +158,8 @@ def contain(command, image_name, image_dir, container_id, container_dir,
 @click.option('--container-dir', help='Containers directory',
               default='/workshop/containers')
 @click.argument('Command', required=True, nargs=-1)
-def run(cpu_shares, image_name, image_dir, container_dir, command):
+def run(memory, memory_swap, cpu_shares, image_name, image_dir, container_dir,
+        command):
     container_id = str(uuid.uuid4())
 
     # linux.clone(callback, flags, callback_args) is modeled after the Glibc
@@ -140,11 +167,11 @@ def run(cpu_shares, image_name, image_dir, container_dir, command):
     flags = (linux.CLONE_NEWPID | linux.CLONE_NEWNS | linux.CLONE_NEWUTS |
              linux.CLONE_NEWNET)
     callback_args = (command, image_name, image_dir, container_id,
-                     container_dir, cpu_shares)
+                     container_dir, cpu_shares, memory, memory_swap)
     pid = linux.clone(contain, flags, callback_args)
 
     # This is the parent, pid contains the PID of the forked process
-    # wait for the forked child, fetch the exit status
+    # Wait for the forked child, fetch the exit status
     _, status = os.waitpid(pid, 0)
     print('{} exited with status {}'.format(pid, status))
 

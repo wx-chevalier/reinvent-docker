@@ -1,14 +1,13 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 3: Switching from chroot to pivot_root.
+"""Docker From Scratch Workshop - Level 4: Add overlay FS.
 
-Goal: Use pivot_root instead of chroot, and umount old_root.
+Goal: Instead of re-extracting the image, use it as a read-only layer
+      (lowerdir), and create a copy-on-write layer for changes (upperdir).
 
-Usage:
-    running:
-        rd.py run -i ubuntu /bin/sh
-    will:
-        - fork a new process in a new mount namespace with a new root
-        - make sure that you can't easily escape
+HINT: Don't forget that overlay fs also requires a workdir.
+
+Read more on overlay FS here:
+https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt
 """
 
 from __future__ import print_function
@@ -33,23 +32,27 @@ def _get_container_path(container_id, container_dir, *subdir_names):
 
 def create_container_root(image_name, image_dir, container_id, container_dir):
     image_path = _get_image_path(image_name, image_dir)
-    container_root = _get_container_path(container_id, container_dir, 'rootfs')
-
     assert os.path.exists(image_path), "unable to locate image %s" % image_name
+
+    # TODO: Instead of creating the container_root and extracting to it,
+    #       create an images_root.
+    # keep only one rootfs per image and re-use it
+    container_root = _get_container_path(container_id, container_dir, 'rootfs')
 
     if not os.path.exists(container_root):
         os.makedirs(container_root)
+        with tarfile.open(image_path) as t:
+            # Fun fact: tar files may contain *nix devices! *facepalm*
+            members = [m for m in t.getmembers()
+                       if m.type not in (tarfile.CHRTYPE, tarfile.BLKTYPE)]
+            t.extractall(container_root, members=members)
 
-    # TODO: uncomment (why?)
-    # linux.mount('tmpfs', container_root, 'tmpfs', 0, None)
+    # TODO: create directories for copy-on-write (uppperdir), overlay workdir,
+    #       and a mount point
 
-    with tarfile.open(image_path) as t:
-        # Fun fact: tar files may contain *nix devices! *facepalm*
-        members = [m for m in t.getmembers()
-                   if m.type not in (tarfile.CHRTYPE, tarfile.BLKTYPE)]
-        t.extractall(container_root, members=members)
+    # TODO: mount the overlay (HINT: use the MS_NODEV flag to mount)
 
-    return container_root
+    return container_root  # return the mountpoint for the mounted overlayfs
 
 
 @click.group()
@@ -71,23 +74,7 @@ def makedev(dev_path):
                  0o666 | dev_type, os.makedev(major, minor))
 
 
-def contain(command, image_name, image_dir, container_id, container_dir):
-    try:
-        linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
-    except RuntimeError as e:
-        if getattr(e, 'args', '') == (1, 'Operation not permitted'):
-            print('Error: Use of CLONE_NEWNS with unshare(2) requires the '
-                  'CAP_SYS_ADMIN capability (i.e. you probably want to retry '
-                  'this with sudo)')
-        raise e
-
-    # TODO: we added MS_REC here. wanna guess why?
-    linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
-
-    new_root = create_container_root(
-        image_name, image_dir, container_id, container_dir)
-    print('Created a new root fs for our container: {}'.format(new_root))
-
+def _create_mounts(new_root):
     # Create mounts (/proc, /sys, /dev) under new_root
     linux.mount('proc', os.path.join(new_root, 'proc'), 'proc', 0, '')
     linux.mount('sysfs', os.path.join(new_root, 'sys'), 'sysfs', 0, '')
@@ -102,12 +89,26 @@ def contain(command, image_name, image_dir, container_id, container_dir):
 
     makedev(os.path.join(new_root, 'dev'))
 
-    os.chroot(new_root)  # TODO: replace with pivot_root
+
+def contain(command, image_name, image_dir, container_id, container_dir):
+    linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
+
+    linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
+
+    new_root = create_container_root(
+        image_name, image_dir, container_id, container_dir)
+    print('Created a new root fs for our container: {}'.format(new_root))
+
+    _create_mounts(new_root)
+
+    old_root = os.path.join(new_root, 'old_root')
+    os.makedirs(old_root)
+    linux.pivot_root(new_root, old_root)
 
     os.chdir('/')
 
-    # TODO: umount2 old root (HINT: see MNT_DETACH in man 2 umount)
-
+    linux.umount2('/old_root', linux.MNT_DETACH)  # umount old root
+    os.rmdir('/old_root')  # rmdir the old_root dir
     os.execvp(command[0], command)
 
 

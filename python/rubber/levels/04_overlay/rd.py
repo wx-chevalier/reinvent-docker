@@ -1,13 +1,7 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 4: Add overlay FS.
+"""Docker From Scratch Workshop - Level 5: Add UTS namespace.
 
-Goal: Instead of re-extracting the image, use it as a read-only layer
-      (lowerdir), and create a copy-on-write layer for changes (upperdir).
-
-HINT: Don't forget that overlay fs also requires a workdir.
-
-Read more on overlay FS here:
-https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt
+Goal: Have your own private hostname!
 """
 
 from __future__ import print_function
@@ -26,33 +20,45 @@ def _get_image_path(image_name, image_dir, image_suffix='tar'):
     return os.path.join(image_dir, os.extsep.join([image_name, image_suffix]))
 
 
-def _get_container_path(container_id, container_dir, *subdir_names):
-    return os.path.join(container_dir, container_id, *subdir_names)
+def _get_container_path(container_id, base_path, *subdir_names):
+    return os.path.join(base_path, container_id, *subdir_names)
 
 
 def create_container_root(image_name, image_dir, container_id, container_dir):
     image_path = _get_image_path(image_name, image_dir)
+    image_root = os.path.join(image_dir, image_name, 'rootfs')
+
     assert os.path.exists(image_path), "unable to locate image %s" % image_name
 
-    # TODO: Instead of creating the container_root and extracting to it,
-    #       create an images_root.
-    # keep only one rootfs per image and re-use it
-    container_root = _get_container_path(container_id, container_dir, 'rootfs')
-
-    if not os.path.exists(container_root):
-        os.makedirs(container_root)
+    if not os.path.exists(image_root):
+        os.makedirs(image_root)
         with tarfile.open(image_path) as t:
             # Fun fact: tar files may contain *nix devices! *facepalm*
             members = [m for m in t.getmembers()
                        if m.type not in (tarfile.CHRTYPE, tarfile.BLKTYPE)]
-            t.extractall(container_root, members=members)
+            t.extractall(image_root, members=members)
 
-    # TODO: create directories for copy-on-write (uppperdir), overlay workdir,
-    #       and a mount point
+    # Create directories for copy-on-write (uppperdir), overlay workdir,
+    # and a mount point
+    container_cow_rw = _get_container_path(
+        container_id, container_dir, 'cow_rw')
+    container_cow_workdir = _get_container_path(
+        container_id, container_dir, 'cow_workdir')
+    container_rootfs = _get_container_path(
+        container_id, container_dir, 'rootfs')
+    for d in (container_cow_rw, container_cow_workdir, container_rootfs):
+        if not os.path.exists(d):
+            os.makedirs(d)
 
-    # TODO: mount the overlay (HINT: use the MS_NODEV flag to mount)
+    # Mount the overlay (HINT: use the MS_NODEV flag to mount)
+    linux.mount(
+        'overlay', container_rootfs, 'overlay', linux.MS_NODEV,
+        "lowerdir={image_root},upperdir={cow_rw},workdir={cow_workdir}".format(
+            image_root=image_root,
+            cow_rw=container_cow_rw,
+            cow_workdir=container_cow_workdir))
 
-    return container_root  # return the mountpoint for the mounted overlayfs
+    return container_rootfs  # return the mountpoint for the overlayfs
 
 
 @click.group()
@@ -92,6 +98,8 @@ def _create_mounts(new_root):
 
 def contain(command, image_name, image_dir, container_id, container_dir):
     linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
+    # TODO: switch to a new UTS namespace, change hostname to container_id
+    # HINT: use linux.sethostname()
 
     linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
 
@@ -109,6 +117,7 @@ def contain(command, image_name, image_dir, container_id, container_dir):
 
     linux.umount2('/old_root', linux.MNT_DETACH)  # umount old root
     os.rmdir('/old_root')  # rmdir the old_root dir
+
     os.execvp(command[0], command)
 
 
@@ -126,8 +135,7 @@ def run(image_name, image_dir, container_dir, command):
     if pid == 0:
         # This is the child, we'll try to do some containment here
         try:
-            contain(command, image_name, image_dir, container_id,
-                    container_dir)
+            contain(command, image_name, image_dir, container_id, container_dir)
         except Exception:
             traceback.print_exc()
             os._exit(1)  # something went wrong in contain()

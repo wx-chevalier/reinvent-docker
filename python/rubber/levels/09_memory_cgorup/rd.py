@@ -1,8 +1,9 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 9: Add Memory Control group.
+"""Docker From Scratch Workshop - Level 10: Exec non-root containers.
 
-Goal: prevent your container from eating all the RAM.
+Goal: allow specifying uid and gid for the container to run as a non-root user.
 """
+
 
 from __future__ import print_function
 
@@ -49,7 +50,7 @@ def create_container_root(image_name, image_dir, container_id, container_dir):
         if not os.path.exists(d):
             os.makedirs(d)
 
-    # Mount the overlay (HINT: use the MS_NODEV flag to mount)
+    # mount the overlay (HINT: use the MS_NODEV flag to mount)
     linux.mount(
         'overlay', container_rootfs, 'overlay', linux.MS_NODEV,
         "lowerdir={image_root},upperdir={cow_rw},workdir={cow_workdir}".format(
@@ -112,15 +113,33 @@ def _setup_cpu_cgroup(container_id, cpu_shares):
         open(cpu_shares_file, 'w').write(str(cpu_shares))
 
 
+def _setup_memory_cgroup(container_id, memory, memory_swap):
+    MEMORY_CGROUP_BASEDIR = '/sys/fs/cgroup/memory'
+    container_mem_cgroup_dir = os.path.join(
+        MEMORY_CGROUP_BASEDIR, 'rubber_docker', container_id)
+
+    # Insert the container to new memory cgroup named 'rubber_docker/container_id'
+    if not os.path.exists(container_mem_cgroup_dir):
+        os.makedirs(container_mem_cgroup_dir)
+    tasks_file = os.path.join(container_mem_cgroup_dir, 'tasks')
+    open(tasks_file, 'w').write(str(os.getpid()))
+
+    if memory is not None:
+        mem_limit_in_bytes_file = os.path.join(
+            container_mem_cgroup_dir, 'memory.limit_in_bytes')
+        open(mem_limit_in_bytes_file, 'w').write(str(memory))
+    if memory_swap is not None:
+        memsw_limit_in_bytes_file = os.path.join(
+            container_mem_cgroup_dir, 'memory.memsw.limit_in_bytes')
+        open(memsw_limit_in_bytes_file, 'w').write(str(memory_swap))
+
+
 def contain(command, image_name, image_dir, container_id, container_dir,
-            cpu_shares, memory, memory_swap):
+            cpu_shares, memory, memory_swap, user):
     _setup_cpu_cgroup(container_id, cpu_shares)
+    _setup_memory_cgroup(container_id, memory, memory_swap)
 
-    # TODO: similarly to the CPU cgorup, add Memory cgroup support here
-    #       setup memory -> memory.limit_in_bytes,
-    #       memory_swap -> memory.memsw.limit_in_bytes if they are not None
-
-    linux.sethostname(container_id)  # Change hostname to container_id
+    linux.sethostname(container_id)  # change hostname to container_id
 
     linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
 
@@ -139,6 +158,9 @@ def contain(command, image_name, image_dir, container_id, container_dir,
     linux.umount2('/old_root', linux.MNT_DETACH)  # umount old root
     os.rmdir('/old_root')  # rmdir the old_root dir
 
+    # TODO: if user is set, drop privileges using os.setuid()
+    #       (and optionally os.setgid()).
+
     os.execvp(command[0], command)
 
 
@@ -152,14 +174,15 @@ def contain(command, image_name, image_dir, container_id, container_dir,
               ' Specify -1 to enable unlimited swap.',
               default=None)
 @click.option('--cpu-shares', help='CPU shares (relative weight)', default=0)
+@click.option('--user', help='UID (format: <uid>[:<gid>])', default='')
 @click.option('--image-name', '-i', help='Image name', default='ubuntu')
 @click.option('--image-dir', help='Images directory',
               default='/workshop/images')
 @click.option('--container-dir', help='Containers directory',
               default='/workshop/containers')
 @click.argument('Command', required=True, nargs=-1)
-def run(memory, memory_swap, cpu_shares, image_name, image_dir, container_dir,
-        command):
+def run(memory, memory_swap, cpu_shares, user, image_name, image_dir,
+        container_dir, command):
     container_id = str(uuid.uuid4())
 
     # linux.clone(callback, flags, callback_args) is modeled after the Glibc
@@ -167,7 +190,7 @@ def run(memory, memory_swap, cpu_shares, image_name, image_dir, container_dir,
     flags = (linux.CLONE_NEWPID | linux.CLONE_NEWNS | linux.CLONE_NEWUTS |
              linux.CLONE_NEWNET)
     callback_args = (command, image_name, image_dir, container_id,
-                     container_dir, cpu_shares, memory, memory_swap)
+                     container_dir, cpu_shares, memory, memory_swap, user)
     pid = linux.clone(contain, flags, callback_args)
 
     # This is the parent, pid contains the PID of the forked process

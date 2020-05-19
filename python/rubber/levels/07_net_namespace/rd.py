@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 7: Add network namespace.
+"""Docker From Scratch Workshop - Level 8: Add CPU Control group.
 
-Goal: Have your own NICs.
+Goal: prevent your container from starving host processes CPU time.
 """
 
 from __future__ import print_function
@@ -95,7 +95,13 @@ def _create_mounts(new_root):
     makedev(os.path.join(new_root, 'dev'))
 
 
-def contain(command, image_name, image_dir, container_id, container_dir):
+def contain(command, image_name, image_dir, container_id, container_dir,
+            cpu_shares):
+    # TODO: insert the container to a new cpu cgroup named:
+    #       'rubber_docker/container_id'
+
+    # TODO: if (cpu_shares != 0)  => set the 'cpu.shares' in our cpu cgroup
+
     linux.sethostname(container_id)  # change hostname to container_id
 
     linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
@@ -119,21 +125,22 @@ def contain(command, image_name, image_dir, container_id, container_dir):
 
 
 @cli.command(context_settings=dict(ignore_unknown_options=True,))
+@click.option('--cpu-shares', help='CPU shares (relative weight)', default=0)
 @click.option('--image-name', '-i', help='Image name', default='ubuntu')
 @click.option('--image-dir', help='Images directory',
               default='/workshop/images')
 @click.option('--container-dir', help='Containers directory',
               default='/workshop/containers')
 @click.argument('Command', required=True, nargs=-1)
-def run(image_name, image_dir, container_dir, command):
+def run(cpu_shares, image_name, image_dir, container_dir, command):
     container_id = str(uuid.uuid4())
 
-    # TODO: switch to a new NET namespace
     # linux.clone(callback, flags, callback_args) is modeled after the Glibc
     # version. see: "man 2 clone"
-    flags = linux.CLONE_NEWPID | linux.CLONE_NEWNS | linux.CLONE_NEWUTS
+    flags = (linux.CLONE_NEWPID | linux.CLONE_NEWNS | linux.CLONE_NEWUTS |
+             linux.CLONE_NEWNET)
     callback_args = (command, image_name, image_dir, container_id,
-                     container_dir)
+                     container_dir, cpu_shares)
     pid = linux.clone(contain, flags, callback_args)
 
     # This is the parent, pid contains the PID of the forked process

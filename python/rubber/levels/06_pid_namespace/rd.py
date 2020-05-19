@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 6: Add PID namespace.
+"""Docker From Scratch Workshop - Level 7: Add network namespace.
 
-Goal: Have your new process start with PID 1 :)
+Goal: Have your own NICs.
 """
 
 from __future__ import print_function
@@ -13,7 +13,6 @@ import uuid
 import click
 import os
 import stat
-import traceback
 
 
 def _get_image_path(image_name, image_dir, image_suffix='tar'):
@@ -97,8 +96,6 @@ def _create_mounts(new_root):
 
 
 def contain(command, image_name, image_dir, container_id, container_dir):
-    linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
-    linux.unshare(linux.CLONE_NEWUTS)  # switch to a new UTS namespace
     linux.sethostname(container_id)  # change hostname to container_id
 
     linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
@@ -131,20 +128,13 @@ def contain(command, image_name, image_dir, container_id, container_dir):
 def run(image_name, image_dir, container_dir, command):
     container_id = str(uuid.uuid4())
 
-    # TODO: Switching to a new PID namespace (using unshare) would only affect
-    #       the children of a process (because we can't change the PID of a
-    #       running process), so we'll have to unshare here OR replace
-    #       os.fork() with linux.clone()
-
-    pid = os.fork()
-    if pid == 0:
-        # This is the child, we'll try to do some containment here
-        try:
-            contain(command, image_name, image_dir, container_id,
-                    container_dir)
-        except Exception:
-            traceback.print_exc()
-            os._exit(1)  # something went wrong in contain()
+    # TODO: switch to a new NET namespace
+    # linux.clone(callback, flags, callback_args) is modeled after the Glibc
+    # version. see: "man 2 clone"
+    flags = linux.CLONE_NEWPID | linux.CLONE_NEWNS | linux.CLONE_NEWUTS
+    callback_args = (command, image_name, image_dir, container_id,
+                     container_dir)
+    pid = linux.clone(contain, flags, callback_args)
 
     # This is the parent, pid contains the PID of the forked process
     # wait for the forked child, fetch the exit status

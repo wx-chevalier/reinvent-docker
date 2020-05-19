@@ -1,13 +1,14 @@
 #!/usr/bin/env python2.7
-"""Docker From Scratch Workshop - Level 2: Adding mount namespace.
+"""Docker From Scratch Workshop - Level 3: Switching from chroot to pivot_root.
 
-Goal: Separate our mount table from the other processes.
+Goal: Use pivot_root instead of chroot, and umount old_root.
 
 Usage:
     running:
         rd.py run -i ubuntu /bin/sh
     will:
-        - fork a new chrooted process in a new mount namespace
+        - fork a new process in a new mount namespace with a new root
+        - make sure that you can't easily escape
 """
 
 from __future__ import print_function
@@ -18,6 +19,7 @@ import uuid
 
 import click
 import os
+import stat
 import traceback
 
 
@@ -38,6 +40,9 @@ def create_container_root(image_name, image_dir, container_id, container_dir):
     if not os.path.exists(container_root):
         os.makedirs(container_root)
 
+    # TODO: uncomment (why?)
+    # linux.mount('tmpfs', container_root, 'tmpfs', 0, None)
+
     with tarfile.open(image_path) as t:
         # Fun fact: tar files may contain *nix devices! *facepalm*
         members = [m for m in t.getmembers()
@@ -52,40 +57,56 @@ def cli():
     pass
 
 
+def makedev(dev_path):
+    for i, dev in enumerate(['stdin', 'stdout', 'stderr']):
+        os.symlink('/proc/self/fd/%d' % i, os.path.join(dev_path, dev))
+    os.symlink('/proc/self/fd', os.path.join(dev_path, 'fd'))
+    # Add extra devices
+    DEVICES = {'null': (stat.S_IFCHR, 1, 3), 'zero': (stat.S_IFCHR, 1, 5),
+               'random': (stat.S_IFCHR, 1, 8), 'urandom': (stat.S_IFCHR, 1, 9),
+               'console': (stat.S_IFCHR, 136, 1), 'tty': (stat.S_IFCHR, 5, 0),
+               'full': (stat.S_IFCHR, 1, 7)}
+    for device, (dev_type, major, minor) in DEVICES.iteritems():
+        os.mknod(os.path.join(dev_path, device),
+                 0o666 | dev_type, os.makedev(major, minor))
+
+
 def contain(command, image_name, image_dir, container_id, container_dir):
+    try:
+        linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
+    except RuntimeError as e:
+        if getattr(e, 'args', '') == (1, 'Operation not permitted'):
+            print('Error: Use of CLONE_NEWNS with unshare(2) requires the '
+                  'CAP_SYS_ADMIN capability (i.e. you probably want to retry '
+                  'this with sudo)')
+        raise e
+
+    # TODO: we added MS_REC here. wanna guess why?
+    linux.mount(None, '/', None, linux.MS_PRIVATE | linux.MS_REC, None)
+
     new_root = create_container_root(
         image_name, image_dir, container_id, container_dir)
     print('Created a new root fs for our container: {}'.format(new_root))
-
-    # TODO: time to say goodbye to the old mount namespace,
-    #       see "man 2 unshare" to get some help
-    #   HINT 1: there is no os.unshare(), time to use the linux module we made
-    #           just for you!
-    #   HINT 2: the linux module includes both functions and constants!
-    #           e.g. linux.CLONE_NEWNS
-
-    # TODO: remember shared subtrees?
-    # (https://www.kernel.org/doc/Documentation/filesystems/sharedsubtree.txt)
-    # Make / a private mount to avoid littering our host mount table.
 
     # Create mounts (/proc, /sys, /dev) under new_root
     linux.mount('proc', os.path.join(new_root, 'proc'), 'proc', 0, '')
     linux.mount('sysfs', os.path.join(new_root, 'sys'), 'sysfs', 0, '')
     linux.mount('tmpfs', os.path.join(new_root, 'dev'), 'tmpfs',
                 linux.MS_NOSUID | linux.MS_STRICTATIME, 'mode=755')
+
     # Add some basic devices
     devpts_path = os.path.join(new_root, 'dev', 'pts')
     if not os.path.exists(devpts_path):
         os.makedirs(devpts_path)
         linux.mount('devpts', devpts_path, 'devpts', 0, '')
-    for i, dev in enumerate(['stdin', 'stdout', 'stderr']):
-        os.symlink('/proc/self/fd/%d' % i, os.path.join(new_root, 'dev', dev))
 
-    # TODO: add more devices (e.g. null, zero, random, urandom) using os.mknod.
+    makedev(os.path.join(new_root, 'dev'))
 
-    os.chroot(new_root)
+    os.chroot(new_root)  # TODO: replace with pivot_root
 
     os.chdir('/')
+
+    # TODO: umount2 old root (HINT: see MNT_DETACH in man 2 umount)
 
     os.execvp(command[0], command)
 
@@ -104,8 +125,8 @@ def run(image_name, image_dir, container_dir, command):
     if pid == 0:
         # This is the child, we'll try to do some containment here
         try:
-            contain(command, image_name, image_dir,
-                    container_id, container_dir)
+            contain(command, image_name, image_dir, container_id,
+                    container_dir)
         except Exception:
             traceback.print_exc()
             os._exit(1)  # something went wrong in contain()
